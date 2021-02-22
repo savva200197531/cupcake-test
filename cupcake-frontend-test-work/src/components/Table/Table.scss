@@ -1,0 +1,20 @@
+.table {
+  font-size: 20px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+}
+
+.table-row {
+  //border: 1px solid black;
+  //grid-gap: 1px;
+  //background-color: black;
+}
+
+.table-column {
+  border: 1px solid #afafaf;
+  background-color: #f2f2f2;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+}
