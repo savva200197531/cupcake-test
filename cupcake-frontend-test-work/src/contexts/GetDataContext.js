@@ -40,6 +40,7 @@ export function GetDataProvider({ children }) {
           currency[attribute]['lowest'] = currency[attribute].value === lowestCurrency(currencyValues);
         });
       })
+
       setCurrencies(newCurrencies);
 
     }).finally(() => {
@@ -59,14 +60,11 @@ export function GetDataProvider({ children }) {
   }
 
   // fill currencies with data
-  const fillNewCurrencies = (newCurrencies, res, attr) => {
+  const fillNewCurrencies = (newCurrencies, res, attr, row) => {
     const [ numerator, denominator ] = attr.split('/');
 
     const preparedRow = {};
-    res.forEach(resItem => {
-      // get row name from url
-      const splitUrl = resItem.config.url.split('/');
-      const row = splitUrl[splitUrl.length - 1];
+    res.forEach((resItem, idx) => {
 
       const numeratorVal = resItem.data.rates[numerator],
         denominatorVal = resItem.data.rates[denominator];
@@ -74,7 +72,7 @@ export function GetDataProvider({ children }) {
       // check for existence of fields to avoid NaN fields
       if (!numeratorVal || !denominatorVal) return;
       preparedRow['name'] = attr;
-      preparedRow[row] = { value: pairCurrency(numeratorVal, denominatorVal) };
+      preparedRow[requests[idx]] = { value: pairCurrency(numeratorVal, denominatorVal) };
     });
 
     if (!Object.keys(preparedRow).length) return;
