@@ -1,53 +1,39 @@
-import React, { useEffect } from "react";
+import React from "react";
 import './Table.scss';
 import { useGetData } from "../../contexts/GetDataContext";
+import Loading from "../Loading/Loading";
+import classnames from 'classnames';
 
 const Table = () => {
 
-  const { currencies } = useGetData();
-
-  useEffect(() => {
-    console.log(currencies);
-  }, [ currencies ])
+  const { currencies, headers } = useGetData();
 
   return (
     <>
-      <div className={'table'}>
-        <div className={'table-row'}>
-          <div className={'table-column'}>Pair name/market</div>
-          <div className={'table-column'}>RUB</div>
-          <div className={'table-column'}>USD</div>
-          <div className={'table-column'}>EUR</div>
-        </div>
-        {
-          currencies.map(currency => (
-            <div className={'table-row'}>
-              <div className={'table-column'}>{currency.row}</div>
-              <div className={'table-column'}>{currency.data.RUB}</div>
-              <div className={'table-column'}>{currency.data.USD}</div>
-              <div className={'table-column'}>{currency.data.EUR}</div>
-            </div>
-          ))
-        }
-        {/*<div className={'table-row'}>*/}
-        {/*  <div className={'table-column'}>First</div>*/}
-        {/*  {currencies.rub && currencies.map(rub => (*/}
-        {/*    <div className={'table-column'}>{rub.value}</div>*/}
-        {/*  ))}*/}
-        {/*</div>*/}
-        {/*<div className={'table-row'}>*/}
-        {/*  <div className={'table-column'}>Second</div>*/}
-        {/*  {currencies.usd && currencies.map(usd => (*/}
-        {/*    <div className={'table-column'}>{usd.value}</div>*/}
-        {/*  ))}*/}
-        {/*</div>*/}
-        {/*<div className={'table-row'}>*/}
-        {/*  <div className={'table-column'}>Third</div>*/}
-        {/*  {currencies.eur && currencies.map(eur => (*/}
-        {/*    <div className={'table-column'}>{eur.value}</div>*/}
-        {/*  ))}*/}
-        {/*</div>*/}
-      </div>
+      {
+        !currencies
+          ? <Loading/>
+          :
+          <table className={'table'}>
+            <thead>
+            <tr>
+              {headers.length && headers.map((header, idx) => (
+                <th key={idx}>{header}</th>
+              ))}
+            </tr>
+            </thead>
+            <tbody>
+            {currencies && currencies.map((currency, idx) => (
+              <tr key={idx}>
+                <td>{currency.name}</td>
+                <td className={classnames(currency.first.lowest && 'lowest-currency')}>{currency.first.value}</td>
+                <td className={classnames(currency.second.lowest && 'lowest-currency')}>{currency.second.value}</td>
+                <td className={classnames(currency.third.lowest && 'lowest-currency')}>{currency.third.value}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+      }
     </>
   )
 }

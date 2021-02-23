@@ -6,68 +6,95 @@ const GetDataContext = React.createContext(undefined, undefined);
 export const useGetData = () => useContext(GetDataContext);
 
 export function GetDataProvider({ children }) {
+  // data generated from config (in this case from here)
+  let requests = [ 'first', 'second', 'third' ];
+  let initialHeaders = [ 'Pair name/market', 'First', 'Second', 'Third' ];
+  const currencyAttrs = [ 'RUB/CUPCAKE', 'USD/CUPCAKE', 'EUR/CUPCAKE', 'RUB/USD', 'RUB/EUR', 'EUR/USD' ];
 
-  const [ currencies, setCurrencies ] = useState([]);
+  // state
+  const [ currencies, setCurrencies ] = useState();
+  const [ headers, setHeaders ] = useState(initialHeaders);
 
+  // form request to api
   const getCurrencies = () => {
-    let requests = [
-      'first',
-      // 'first/poll',
-      'second',
-      // 'second/poll',
-      'third',
-      // 'third/poll',
-    ].map(request => axios.get(`http://localhost:3000/api/v1/${request}`));
-
-    return axios.all(requests);
+    const localRequests = requests.map(request => axios.get(`http://localhost:3000/api/v1/${request}`));
+    return axios.all(localRequests);
   };
 
   const formCurrencies = () => {
-
     const newCurrencies = [];
+    setHeaders(initialHeaders);
 
-    getCurrencies().then(resItem => {
-      if (!resItem) return;
-      resItem.forEach(resItem => {
-        const splitUrl = resItem.config.url.split('/');
-        const row = splitUrl[splitUrl.length - 1];
-        newCurrencies.push({
-          data: resItem.data.rates,
-          row
+    getCurrencies().then(res => {
+      currencyAttrs.forEach(attr => {
+        fillNewCurrencies(newCurrencies, res, attr);
+      });
+
+      // iterate data and find lowest values
+      newCurrencies.forEach(currency => {
+        const currencyValues = [];
+        requests.map(attribute => {
+          currencyValues.push(currency[attribute].value)
+          return attribute;
+        }).forEach(attribute => {
+          currency[attribute]['lowest'] = currency[attribute].value === lowestCurrency(currencyValues);
         });
       })
-      console.log(newCurrencies)
       setCurrencies(newCurrencies);
+
+    }).finally(() => {
+      // re-call function when data is get to get new data
+      setTimeout(() => {
+        formCurrencies();
+      }, 5000);
+
+    }).catch(error => {
+      // catch error and set display it in header
+      setCurrencies([]);
+      setHeaders(headers => {
+        return headers.map(() => 'Error');
+      })
+      console.error('error', error);
     })
-
-
-    // requestApi(requests).then(response => {
-    //   if (!response) return;
-    //   // newCurrencies.rub.push({
-    //   //   value: response.data.rates.RUB,
-    //   //   type: request,
-    //   //   currency: 'RUB'
-    //   // });
-    //   // newCurrencies.usd.push({
-    //   //   value: response.data.rates.USD,
-    //   //   type: request,
-    //   //   currency: 'USD'
-    //   // });
-    //   // newCurrencies.eur.push({
-    //   //   value: response.data.rates.EUR,
-    //   //   type: request,
-    //   //   currency: 'EUR'
-    //   // });
-    //   console.log(response)
-    // })
   }
+
+  // fill currencies with data
+  const fillNewCurrencies = (newCurrencies, res, attr) => {
+    const [ numerator, denominator ] = attr.split('/');
+
+    const preparedRow = {};
+    res.forEach(resItem => {
+      // get row name from url
+      const splitUrl = resItem.config.url.split('/');
+      const row = splitUrl[splitUrl.length - 1];
+
+      const numeratorVal = resItem.data.rates[numerator],
+        denominatorVal = resItem.data.rates[denominator];
+
+      // check for existence of fields to avoid NaN fields
+      if (!numeratorVal || !denominatorVal) return;
+      preparedRow['name'] = attr;
+      preparedRow[row] = { value: pairCurrency(numeratorVal, denominatorVal) };
+    });
+
+    if (!Object.keys(preparedRow).length) return;
+    // push the resulting objects to initial value;
+    newCurrencies.push(preparedRow);
+  }
+
+  // find minimum currency value in arr
+  const lowestCurrency = arr => arr.reduce((p, v) => (p < v ? p : v));
+
+  // calculate the ratio of currency pairs
+  const pairCurrency = (numerator, denominator) => Number((numerator / denominator).toFixed(2));
 
   useEffect(() => {
     formCurrencies();
   }, []);
 
   const value = {
-    currencies: currencies
+    currencies,
+    headers
   }
 
   return (
