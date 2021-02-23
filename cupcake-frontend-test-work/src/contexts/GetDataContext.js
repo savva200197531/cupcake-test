@@ -65,7 +65,7 @@ export function GetDataProvider({ children }) {
   }
 
   // fill currencies with data
-  const fillNewCurrencies = (newCurrencies, res, attr, row) => {
+  const fillNewCurrencies = (newCurrencies, res, attr) => {
     const [ numerator, denominator ] = attr.split('/');
 
     const preparedRow = {};
@@ -74,10 +74,8 @@ export function GetDataProvider({ children }) {
       const numeratorVal = resItem.data.rates[numerator],
         denominatorVal = resItem.data.rates[denominator];
 
-      // check for existence of fields to avoid NaN fields
-      if (!numeratorVal || !denominatorVal) return;
       preparedRow['name'] = attr;
-      preparedRow[requests[idx]] = { value: pairCurrency(numeratorVal, denominatorVal) };
+      preparedRow[requests[idx]] = { value: pairCurrency(numeratorVal, denominatorVal || 1) };
     });
 
     if (!Object.keys(preparedRow).length) return;
