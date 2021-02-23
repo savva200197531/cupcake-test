@@ -7,13 +7,16 @@ export const useGetData = () => useContext(GetDataContext);
 
 export function GetDataProvider({ children }) {
   // data generated from config (in this case from here)
-  let requests = [ 'first', 'second', 'third' ];
+  let initialRequests = [ 'first', 'second', 'third' ];
   let initialHeaders = [ 'Pair name/market', 'First', 'Second', 'Third' ];
   const currencyAttrs = [ 'RUB/CUPCAKE', 'USD/CUPCAKE', 'EUR/CUPCAKE', 'RUB/USD', 'RUB/EUR', 'EUR/USD' ];
+
+  let timeout;
 
   // state
   const [ currencies, setCurrencies ] = useState();
   const [ headers, setHeaders ] = useState(initialHeaders);
+  const [ requests, setRequests ] = useState(initialRequests);
 
   // form request to api
   const getCurrencies = () => {
@@ -24,6 +27,7 @@ export function GetDataProvider({ children }) {
   const formCurrencies = () => {
     const newCurrencies = [];
     setHeaders(initialHeaders);
+    setRequests(initialRequests);
 
     getCurrencies().then(res => {
       currencyAttrs.forEach(attr => {
@@ -45,7 +49,7 @@ export function GetDataProvider({ children }) {
 
     }).finally(() => {
       // re-call function when data is get to get new data
-      setTimeout(() => {
+      timeout = setTimeout(() => {
         formCurrencies();
       }, 5000);
 
@@ -55,6 +59,7 @@ export function GetDataProvider({ children }) {
       setHeaders(headers => {
         return headers.map(() => 'Error');
       })
+      clearTimeout(timeout);
       console.error('error', error);
     })
   }
